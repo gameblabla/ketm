@@ -56,7 +56,8 @@ void menu_init()
 
 void menu_work()
 {
-	playChunk(2);
+	// Who the fuck added the code below ? Delete - Gameblabla
+	//playChunk(2);
 	switch(state.substate) {
 		case MEN_START:
 			startmenu_work();
@@ -175,7 +176,8 @@ void optionmenu_work()
 	} else {
 		optionmenu.select_finish=0;
 		switch(optionmenu.active_item) {
-			playChunk(2);
+			// Again, why ? - Gameblabla
+			//playChunk(2);
 			case 0: /* change Sound-FX Volume  */
 				newstate(ST_MENU,MEN_VOLUME,1);
 				break;

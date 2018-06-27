@@ -10,6 +10,8 @@ KEYCONFIG keyconfig;
 //Uint32 videoflags=SDL_FULLSCREEN | SDL_DOUBLEBUF |SDL_HWSURFACE | SDL_HWPALETTE| SDL_HWACCEL;
 #ifdef GP2X
 Uint32 videoflags=SDL_FULLSCREEN | SDL_SWSURFACE;
+#elif defined(RS97)
+Uint32 videoflags=SDL_HWSURFACE | SDL_HWPALETTE| SDL_HWACCEL;
 #else
 Uint32 videoflags=SDL_DOUBLEBUF |SDL_HWSURFACE | SDL_HWPALETTE| SDL_HWACCEL;
 #endif
@@ -27,82 +29,21 @@ void game_init(int argc, char *argv[])
 	Uint32 initflags=0;
 	int i;
 	SDL_Joystick *joy;
-	for(i=2;i<=argc;i++) {
-		if(!strncmp(argv[i-1],"-d",2)) {
-			debug=1;
-			error(ERR_DEBUG,"debug-mode enabled");
-		} else if(!strncmp(argv[i-1],"-f",2)) {
-			videoflags=videoflags|SDL_FULLSCREEN;
-		} else if(!strncmp(argv[i-1],"-j",2)) {
-			use_joystick=1;
-		} else if(!strncmp(argv[i-1],"-16",3)) {
-			depth=16;
-		} else if(!strncmp(argv[i-1],"-32",3)) {
-			depth=32;
-		} else if(!strncmp(argv[i-1],"-r1",3)) {
-			scaling=1;
-		} else if(!strncmp(argv[i-1],"-r2",3)) {
-			scaling=2;
-		} else if(!strncmp(argv[i-1],"-r3",3)) {
-			scaling=2;
-			WIDTH=400;
-		} else if(!strncmp(argv[i-1],"-r4",3)) {
-			scaling=3;
-		} else if(!strncmp(argv[i-1],"-r5",3)) {
-			scaling=3;
-			WIDTH=360;
-		} else if(!strncmp(argv[i-1],"-m",3) && i+1<=argc) {
-			moddir = argv[i];
-			i++;			
-		} else if(!strncmp(argv[i-1],"-h",2)) {
-			error(ERR_INFO,"%s:  a shoot-em-all game",argv[0]);
-			error(ERR_INFO,"-h:  get this help");
-			error(ERR_INFO,"-f:  fullscreen mode");
-			error(ERR_INFO,"-j:  enable joystick-support (preliminary)");
-			error(ERR_INFO,"-d:  enable debug messages");
-			error(ERR_INFO,"-16: force 16 bit screen (default)");
-			error(ERR_INFO,"-32: force 32 bit screen");
-			error(ERR_INFO,"-r1: Resolution 320*240 (default)");
-			error(ERR_INFO,"-r2: Resolution 640*480");
-			error(ERR_INFO,"-r3: Resolution 800*480");
-			error(ERR_INFO,"-r4: Resolution 960*720");
-			error(ERR_INFO,"-r5: Resolution 1080*720");
-			exit(0);
-		} else {
-			error(ERR_WARN,"unknown command line option: %s (try -h to get help)",argv[i-1]);
-		}
-	}
 
-	fprintf(stdout,"FYI: very early prepreprealpha, debug-mode forced\n"); debug=1;
-	initflags=SDL_INIT_VIDEO;
+	use_joystick = 0;
+	/*initflags=SDL_INIT_VIDEO;
 	if(use_joystick)
-		initflags|=SDL_INIT_JOYSTICK;
+		initflags|=SDL_INIT_JOYSTICK;*/
 
+	SDL_Init(SDL_INIT_VIDEO);
+	//atexit(SDL_Quit);
 
-	if(SDL_Init(initflags)<0) {
-		CHECKPOINT;
-		error(ERR_FATAL,"cant init SDL: %s",SDL_GetError());
-	}
-
-	if(atexit(SDL_Quit)) {
-		CHECKPOINT;
-		error(ERR_WARN,"atexit dont returns zero");
-	}
-
-	if((display=SDL_SetVideoMode(WIDTH*scaling,HEIGHT*scaling,depth,videoflags))==NULL) {
+	//if((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
+	if((screen=SDL_SetVideoMode(320,240,16,SDL_HWSURFACE))==NULL) {
 		CHECKPOINT;
 		error(ERR_FATAL,"cant open screen: %s",SDL_GetError());
 	}
-	screen=SDL_CreateRGBSurface(SDL_HWSURFACE, WIDTH, HEIGHT, depth, 0, 0, 0, 0);
-	//display_vidinfo(screen);
-	/*
-	if(depth==0) {
-		error(ERR_DEBUG,"we want the current screen bit-depth...");
-	} else {
-		error(ERR_DEBUG,"we want a %d bpp screen...",depth);
-	}
-	error(ERR_DEBUG,"... and got a %d bpp surface",screen->format->BitsPerPixel);
-	*/
+	SDL_ShowCursor(0);
 
 	if(use_joystick) {
 		if(debug) {
@@ -130,29 +71,10 @@ void game_init(int argc, char *argv[])
 	keyconfig.d=SDLK_DOWN;
 	keyconfig.l=SDLK_LEFT;
 	keyconfig.r=SDLK_RIGHT;
-	keyconfig.f=SDLK_HOME;
+	keyconfig.f=SDLK_LCTRL;
 	keyconfig.e=SDLK_LALT;
-
-	//#ifdef GP2X_diagonals
-	//keyconfig.ul=SDLK_q;
-	//keyconfig.ur=SDLK_e;
-	//keyconfig.dl=SDLK_z;
-	//keyconfig.dr=SDLK_x;
-	//#endif
-
-	/*
-	error(ERR_DEBUG,"Key-configuration:");
-	error(ERR_DEBUG,"up-key    : %s",SDL_GetKeyName(keyconfig.u));
-	error(ERR_DEBUG,"down-key  : %s",SDL_GetKeyName(keyconfig.d));
-	error(ERR_DEBUG,"left-key  : %s",SDL_GetKeyName(keyconfig.l));
-	error(ERR_DEBUG,"right-key : %s",SDL_GetKeyName(keyconfig.r));
-	error(ERR_DEBUG,"fire-key  : %s",SDL_GetKeyName(keyconfig.f));
-	error(ERR_DEBUG,"escape-key: %s",SDL_GetKeyName(keyconfig.e));
-	*/
-
-	//SDL_ShowCursor(1);
-	//SDL_WM_SetCaption("killeverythingthatmoves","ketm");
-
+	keyconfig.g=SDLK_ESCAPE;
+	
 	keyboard_clear();
 	preload_gfx();
 	font_init();
@@ -162,36 +84,9 @@ void game_init(int argc, char *argv[])
 	fps_init();
 	newstate(ST_START_INTRO,0,1);
 	initSound();
-	// added by farox
-	SDL_ShowCursor(0);
 
 }
-/*
-#ifndef GP2X
-void toggle_fullscreen()
-{
-	SDL_Surface *tmp;
 
-	if(videoflags==SDL_DOUBLEBUF)
-		videoflags=SDL_FULLSCREEN;
-	else
-		videoflags=SDL_DOUBLEBUF;
-
-	tmp=SDL_ConvertSurface(screen,screen->format,screen->flags);
-	if(tmp==NULL) {
-		CHECKPOINT;
-		error(ERR_FATAL,"cant copy screen");
-	}
-	if((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
-		CHECKPOINT;
-		error(ERR_FATAL,"cant open change fullscreen/window: %s",SDL_GetError());
-	}
-	SDL_BlitSurface(tmp,NULL,screen,NULL);
-	//SDL_FreeSurface(tmp);
-	// display_vidinfo();
-}
-#endif
-*/
 void error(int errorlevel, char *msg, ...)
 {
 	char msgbuf[128];
@@ -210,13 +105,6 @@ void error(int errorlevel, char *msg, ...)
 
 	if(errorlevel==ERR_FATAL) exit(1);
 }
-
-//#define moddir "/mnt/sd/game/ketm_2x/_1941"
-
-// farox mod...temporary until a menu is done
-//#define moddir "./_1941"
-//#define moddir "./_episode1"
-
 
 SDL_Surface *loadbmp(char *filename)
 {
@@ -351,7 +239,7 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
 	Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x*bpp;
 
 	if(x>=clip_xmin(surface) && x<=clip_xmax(surface) && y>=clip_ymin(surface) && y<=clip_ymax(surface)){
-		switch(bpp) {
+		/*switch(bpp) {
 			case 1:
 				return *p;
 			case 2:
@@ -365,7 +253,8 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
 				return *(Uint32 *)p;
 			default:
 				return 0;
-		}
+		}*/
+		return *(Uint16 *)p;
 	} else return 0;
 }
 
@@ -374,7 +263,7 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 	int bpp=surface->format->BytesPerPixel;
 	Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x*bpp;
 	if(x>=clip_xmin(surface) && x<=clip_xmax(surface) && y>=clip_ymin(surface) && y<=clip_ymax(surface)){
-		switch(bpp) {
+		/*switch(bpp) {
 			case 1:
 				*p=pixel;
 				break;
@@ -394,100 +283,10 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 				break;
 			case 4:
 				*(Uint32 *)p=pixel;
-		}
+		}*/
+		*(Uint16 *)p=pixel;
 	}
 }
-/*
-void draw_line(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1, Uint32 farbe2)
-{
-	int dx,dy,dxabs,dyabs,i,px,py,sdx,sdy,x,y;
-
-	dx=x2-x1;
-	dy=y2-y1;
-	sdx=sign(dx);
-	sdy=sign(dy);
-	dxabs=abs(dx);
-	dyabs=abs(dy);
-	x=0;
-	y=0;
-	px=x1;
-	py=y1;
-
-	if(SDL_MUSTLOCK(s))
-		SDL_LockSurface(s);
-
-	if(dxabs>=dyabs) {
-		for(i=0;i<dxabs;i++) {
-			y+=dyabs;
-			if(y>=dxabs) {
-				y-=dxabs;
-				py+=sdy;
-			}
-			putpixel(s,px,py-1,farbe2);
-			putpixel(s,px,py,farbe1);
-			putpixel(s,px,py+1,farbe2);
-			px+=sdx;
-		}
-	} else {
-		for(i=0;i<dyabs;i++) {
-			x+=dxabs;
-			if(x>=dyabs) {
-				x-=dyabs;
-				px+=sdx;
-			}
-			putpixel(s,px-1,py,farbe2);
-			putpixel(s,px,py,farbe1);
-			putpixel(s,px+1,py,farbe2);
-			py+=sdy;
-		}
-	}
-	if(SDL_MUSTLOCK(s))
-		SDL_UnlockSurface(s);
-}
-
-void draw_line_simple(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1)
-{
-	int dx,dy,dxabs,dyabs,i,px,py,sdx,sdy,x,y;
-
-	dx=x2-x1;
-	dy=y2-y1;
-	sdx=sign(dx);
-	sdy=sign(dy);
-	dxabs=abs(dx);
-	dyabs=abs(dy);
-	x=0;
-	y=0;
-	px=x1;
-	py=y1;
-
-	if(SDL_MUSTLOCK(s))
-		SDL_LockSurface(s);
-
-	if(dxabs>=dyabs) {
-		for(i=0;i<dxabs;i++) {
-			y+=dyabs;
-			if(y>=dxabs) {
-				y-=dxabs;
-				py+=sdy;
-			}
-			putpixel(s,px,py,farbe1);
-			px+=sdx;
-		}
-	} else {
-		for(i=0;i<dyabs;i++) {
-			x+=dxabs;
-			if(x>=dyabs) {
-				x-=dyabs;
-				px+=sdx;
-			}
-			putpixel(s,px,py,farbe1);
-			py+=sdy;
-		}
-	}
-	if(SDL_MUSTLOCK(s))
-		SDL_UnlockSurface(s);
-}
-*/
 
 void blit_scaled(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct)
 {
@@ -639,22 +438,6 @@ void keyboard_poll()
 					if(event.jbutton.button==13) { // button B
 						keyboard[keyconfig.f]=1;
 					}
-					// implemented on GP2X ...by Farox
-					//#ifdef GP2X_diagonals
-					//if(event.jbutton.button==1) { // button UPLEFT
-					//	keyboard[keyconfig.ul]=1;
-					//}
-					//if(event.jbutton.button==7) { // button UPRIGHT
-					//	keyboard[keyconfig.ur]=1;
-					//}
-					//if(event.jbutton.button==3) { // button DOWNLEFT
-					//	keyboard[keyconfig.dl]=1;
-					//}
-					//if(event.jbutton.button==5) { // button DOWNRIGHT
-					//	keyboard[keyconfig.dr]=1;
-					//}
-					//#endif
-					////////////////////////////
 					if(event.jbutton.button==4) { // button DOWN
 						keyboard[keyconfig.d]=1;
 					}
@@ -691,22 +474,6 @@ void keyboard_poll()
 					if(event.jbutton.button==13) {
 						keyboard[keyconfig.f]=0;
 					}
-					//// by Farox
-					//#ifdef GP2X_diagonals
-					//if(event.jbutton.button==1) { // button UPLEFT
-					//	keyboard[keyconfig.ul]=0;
-					//}
-					//if(event.jbutton.button==7) { // button UPRIGHT
-					//	keyboard[keyconfig.ur]=0;
-					//}
-					//if(event.jbutton.button==3) { // button DOWNLEFT
-					//	keyboard[keyconfig.dl]=0;
-					//}
-					//if(event.jbutton.button==5) { // button DOWNRIGHT
-					//	keyboard[keyconfig.dr]=0;
-					//}
-					//#endif
-					/////////////////////////////
 					if(event.jbutton.button==4) {
 						keyboard[keyconfig.d]=0;
 					}
@@ -906,68 +673,4 @@ void preload_gfx()
 	tmp=loadbmp("tshoot.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("protectball.png"); unloadbmp_by_surface(tmp);
 	/* alle benoetigten Bilder in den Cache laden */
-}
-
-
-
-
-
-
-
-
-
-
-void display_vidinfo()
-{
-	const SDL_VideoInfo *s;
-	char driver[256];
-	SDL_Rect **modes;
-	int i;
-
-	error(ERR_DEBUG,"============ SDL VideoInfo ============");
-
-	s=SDL_GetVideoInfo();
-
-	if(SDL_VideoDriverName(driver,256)==NULL)
-		error(ERR_WARN,"couldn't get video driver name");
-	else
-		error(ERR_DEBUG,"Video Driver: %s",driver);
-
-	error(ERR_DEBUG,"BitsPerPixel: %d",s->vfmt->BitsPerPixel);
-	if(s->vfmt->palette==NULL) {
-		error(ERR_DEBUG,"R Mask      : 0x%.8x",s->vfmt->Rmask);
-		error(ERR_DEBUG,"G Mask      : 0x%.8x",s->vfmt->Gmask);
-		error(ERR_DEBUG,"B Mask      : 0x%.8x",s->vfmt->Bmask);
-	}
-	#ifdef GP2X
-	error(ERR_DEBUG,"SW Surface  : %savailable",s->hw_available ? "" : "not ");
-	#else
-	error(ERR_DEBUG,"HW Surface  : %savailable",s->hw_available ? "" : "not ");
-	#endif
-	error(ERR_DEBUG,"Win-Manager : %savailable",s->wm_available ? "" : "not ");
-	error(ERR_DEBUG,"H->H Blit   : %savailable",s->blit_hw ? "" : "not ");
-	error(ERR_DEBUG,"H->H Blit CC: %savailable",s->blit_hw_CC ? "" : "not ");
-	error(ERR_DEBUG,"H->H Blit A : %savailable",s->blit_hw_A ? "" : "not ");
-	error(ERR_DEBUG,"S->H Blit   : %savailable",s->blit_sw ? "" : "not ");
-	error(ERR_DEBUG,"S->H Blit CC: %savailable",s->blit_sw_CC ? "" : "not ");
-	error(ERR_DEBUG,"S->H Blit A : %savailable",s->blit_sw_A ? "" : "not ");
-	error(ERR_DEBUG,"Color Fill  : %savailable",s->blit_fill ? "" : "not ");
-	error(ERR_DEBUG,"Video-Mem   : %d",s->video_mem);
-
-	error(ERR_DEBUG,"Available Fullscreen modes:");
-	modes=SDL_ListModes(NULL,SDL_FULLSCREEN);
-	for(i=0;modes[i];i++) {
-		error(ERR_DEBUG,"%d: %dx%d",i+1,modes[i]->w,modes[i]->h);
-	}
-	#ifdef GP2X
-	error(ERR_DEBUG,"Available SW-surfaces modes:");
-	modes=SDL_ListModes(NULL,SDL_FULLSCREEN|SDL_SWSURFACE);
-	#else
-	error(ERR_DEBUG,"Available HW-surfaces modes:");
-	modes=SDL_ListModes(NULL,SDL_FULLSCREEN|SDL_HWSURFACE);
-	#endif
-	for(i=0;modes[i];i++) {
-		error(ERR_DEBUG,"%d: %dx%d",i+1,modes[i]->w,modes[i]->h);
-	}
-	error(ERR_DEBUG,"=======================================");
 }

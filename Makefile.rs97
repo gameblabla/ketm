@@ -1,0 +1,40 @@
+PRGNAME     = ketm.elf
+
+CHAINPREFIX=/opt/rs97-toolchain
+CROSS_COMPILE=$(CHAINPREFIX)/usr/bin/mipsel-linux-
+CC = $(CROSS_COMPILE)gcc
+CXX = $(CROSS_COMPILE)g++
+LD = $(CROSS_COMPILE)gcc
+STRIP = $(CROSS_COMPILE)strip
+SYSROOT     := $(CHAINPREFIX)/usr/mipsel-buildroot-linux-uclibc/sysroot
+SDL_CFLAGS  := $(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
+SDL_LIBS    := $(shell $(SYSROOT)/usr/bin/sdl-config --libs)
+
+# change compilation / linking flag options
+F_OPTS		= -Iinclude $(SDL_CFLAGS)
+CC_OPTS		= -O2 -fomit-frame-pointer -fdata-sections -ffunction-sections -mips32 -mno-mips16 $(F_OPTS)
+CFLAGS		= -I$(SDL_INCLUDE) $(CC_OPTS)
+CXXFLAGS	= $(CFLAGS) 
+LDFLAGS     = $(SDL_LIBS) -lSDL_mixer -lSDL_image -lm -Wl,--as-needed -Wl,--gc-sections -flto -s
+
+# Files to be compiled
+SRCDIR    = ./src
+VPATH     = $(SRCDIR)
+SRC_C   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
+SRC_CP   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.cpp))
+OBJ_C   = $(notdir $(patsubst %.c, %.o, $(SRC_C)))
+OBJ_CP   = $(notdir $(patsubst %.cpp, %.o, $(SRC_CP)))
+OBJS     = $(OBJ_C) $(OBJ_CP)
+
+# Rules to make executable
+$(PRGNAME)$(EXESUFFIX): $(OBJS)  
+	$(LD) $(CFLAGS) -o $(PRGNAME)$(EXESUFFIX) $^ $(LDFLAGS)
+
+$(OBJ_C) : %.o : %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(OBJ_CP) : %.o : %.cpp
+	$(CCP) $(CXXFLAGS) -c -o $@ $<
+
+clean:
+	rm -f $(PRGNAME)$(EXESUFFIX) *.o

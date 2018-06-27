@@ -10,17 +10,6 @@ void score_display()
 	char buffer[100];
 	char buf[50];
 
-
-	//sprintf(buffer,"SHIPS : %d",p->lives);
-	//font_print(buffer,FONT07,0,10);
-
-	//sprintf(buffer,"SPEED : %d",p->player_speed);
-	//font_print(buffer,FONT07,0,20);
-
-	//sprintf(buffer,"STAGE : %d",p->level);
-	//font_print(buffer,FONT07,0,30);
-
-	//sprintf(buf,"WEAPON: ");
 	sprintf(buf,"W: ");
 	switch(p->weapon) {
 	case WP_PLASMA:

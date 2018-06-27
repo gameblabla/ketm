@@ -3,7 +3,6 @@
 //#include <psppower.h>
 
 extern SDL_Surface *screen;
-extern SDL_Surface *display;
 extern int keyboard[];
 
 GAMESTATE state;
@@ -224,19 +223,15 @@ int main(int argc, char *argv[])
 		}
 
 		fps_show();
-		if (scaling==2||scaling==3)
-			//scale2x(screen,display);
-			scale(scaling, display->pixels, depth*scaling*WIDTH/8, screen->pixels, depth*WIDTH/8, depth/8, WIDTH, HEIGHT);
-		else
-			SDL_BlitSurface(screen,NULL,display,NULL);
-		SDL_Flip(display);
+		SDL_Flip(screen);
 		fps_newframe();
 	}
 
 	/* TODO: Free everything (memory, SDL_Surfaces, Joysticks...) */
 
 	hsc_save();
-
+	SDL_FreeSurface(screen);
+	SDL_Quit();
 	//fprintf(stdout,"Thank you for playing\n");
-	exit(0);
+	return 0;
 }

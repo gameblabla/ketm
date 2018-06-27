@@ -64,6 +64,7 @@ typedef struct {
 	int r;
 	int f;
 	int e;
+	int g;
 } KEYCONFIG;
 
 #include "font.h"

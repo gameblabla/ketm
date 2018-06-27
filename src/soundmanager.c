@@ -24,14 +24,6 @@
 static int useAudio = 0;
 
 #define MUSIC_NUM 2
-
-/*static char *musicFileName[MUSIC_NUM] = {
-  "stg0", "stg1",
-};
-static Mix_Music *music[MUSIC_NUM];
-*/
-
-
 static Mix_Music *music;
 
 ///////added by Farox
@@ -39,12 +31,7 @@ int _CurrentVolume;
 ////////////////////////////
 
 #define CHUNK_NUM 7
-
-//#define moddir "/mnt/sd/game/ketm_2x/_1941"
-
-// farox mod...temporary until a menu is done
-//#define moddir "./_1941"
-#define moddir "./_episode1"
+#define moddir "./data"
 
 static char *chunkFileName[CHUNK_NUM] = {
   "shot.wav", "hit.wav", "foedst.wav", "bossdst.wav", "shipdst.wav", "bonus.wav", "extend.wav",
@@ -52,163 +39,116 @@ static char *chunkFileName[CHUNK_NUM] = {
 static Mix_Chunk *chunk[CHUNK_NUM];
 static int chunkFlag[CHUNK_NUM];
 
-void closeSound() {
-  int i;
-  if ( !useAudio ) return;
-  if ( Mix_PlayingMusic() ) {
-    Mix_HaltMusic();
-  }
-/*
-  for ( i=0 ; i<MUSIC_NUM ; i++ ) {
-    if ( music[i] ) {
-      Mix_FreeMusic(music[i]);
-    }
-  }
-*/
-  for ( i=0 ; i<CHUNK_NUM ; i++ ) {
-    if ( chunk[i] ) {
-      Mix_FreeChunk(chunk[i]);
-    }
-  }
-  Mix_CloseAudio();
+void closeSound() 
+{
+	int i;
+	if ( !useAudio ) return;
+	if ( Mix_PlayingMusic() ) 
+	{
+		Mix_HaltMusic();
+	}
+	for ( i=0 ; i<CHUNK_NUM ; i++ )
+	{
+		if ( chunk[i] ) 
+		{
+			Mix_FreeChunk(chunk[i]);
+		}
+	}
+	Mix_CloseAudio();
 }
 
 
 // Initialize the sound.
 
-static void loadSounds() {
-  int i;
-  char name[52];
-/*
-  for ( i=0 ; i<MUSIC_NUM ; i++ ) {
-    strcpy(name, "sounds/");
-    strcat(name, musicFileName[i]);
-    strcat(name, ".s3m");
-    if ( NULL == (music[i] = Mix_LoadMUS(name)) ) {
+static void loadSounds() 
+{
+	int i;
+	char name[52];
 
-		//try mod
-    	strcpy(name, "sounds/");
-    	strcat(name, musicFileName[i]);
-    	strcat(name, ".mod");
-    	if ( NULL == (music[i] = Mix_LoadMUS(name)) ) {
-    		strcpy(name, "sounds/");
-    		strcat(name, musicFileName[i]);
-    		strcat(name, ".xm");
-    		if ( NULL == (music[i] = Mix_LoadMUS(name)) ) {
-    			strcpy(name, "sounds/");
-    			strcat(name, musicFileName[i]);
-    			strcat(name, ".ogg");
-    			if ( NULL == (music[i] = Mix_LoadMUS(name)) ) {
-      				pspDebugScreenPrintf("Couldn't load: %s\n", name);
-      				//useAudio = 0;
-      				//return;
-			}
+	for ( i=0 ; i<CHUNK_NUM ; i++ ) 
+	{
+		strcpy(name, moddir);
+		strcat(name, "/sounds/");
+		strcat(name, chunkFileName[i]);
+		if ( NULL == (chunk[i] = Mix_LoadWAV(name)) ) 
+		{
+			printf("Couldn't load: %s\n", name);
+			useAudio = 1;
+			return;
 		}
+		chunkFlag[i] = 0;
 	}
-    }
-  }
-*/
-  for ( i=0 ; i<CHUNK_NUM ; i++ ) {
-    strcpy(name, moddir);
-    strcat(name, "/sounds/");
-    strcat(name, chunkFileName[i]);
-    if ( NULL == (chunk[i] = Mix_LoadWAV(name)) ) {
-      #ifdef PSP
-      pspDebugScreenPrintf("Couldn't load: %s\n", name);
-      #endif
-      useAudio = 0;
-      return;
-    }
-    chunkFlag[i] = 0;
-  }
 }
 
 void initSound() {
-  int audio_rate;
-  Uint16 audio_format;
-  int audio_channels;
-  int audio_buffers;
+	int audio_rate;
+	Uint16 audio_format;
+	int audio_channels;
+	int audio_buffers;
 
-  if ( SDL_InitSubSystem(SDL_INIT_AUDIO) < 0 ) {
-    #ifdef PSP
-    pspDebugScreenPrintf( "Unable to initialize SDL_AUDIO: %s\n", SDL_GetError());
-    #endif
-    return;
-  }
+	if ( SDL_InitSubSystem(SDL_INIT_AUDIO) < 0 ) 
+	{
+		#ifdef PSP
+		pspDebugScreenPrintf( "Unable to initialize SDL_AUDIO: %s\n", SDL_GetError());
+		#endif
+		return;
+	}
 
-  #ifdef GP2X
-  audio_rate = 22050;
-  audio_format = AUDIO_S16;
-  audio_channels = 2;
-  audio_buffers = 256 ;
-  #else
-  audio_rate = 44100;
-  audio_format = AUDIO_S16;
-  audio_channels = 2;
-  audio_buffers = 1024 ;
-  #endif
+	audio_rate = 48000;
+	audio_format = AUDIO_S16LSB;
+	audio_channels = 2;
+	audio_buffers = 2048 ;
 
-  if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0) {
-    #ifdef PSP
-    pspDebugScreenPrintf( "Couldn't open audio: %s\n", SDL_GetError());
-    #endif
-    return;
-  } else {
+	Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers);
     Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
-    #ifdef GP2X
     Mix_AllocateChannels(16); //added by Farox
-    #endif
-  }
 
-  useAudio = 1;
-  loadSounds();
-  ////////added by Farox
-  _CurrentVolume=64;
-  Mix_Volume(-1,_CurrentVolume);
-  ////////////////////////
+	useAudio = 1;
+	loadSounds();
+	////////added by Farox
+	_CurrentVolume=64;
+	Mix_Volume(-1,_CurrentVolume);
+	////////////////////////
 }
 
 // Play/Stop the music/chunk.
 
 void playMusic(char *file) {
-  char name[72];
- /*   if ( music!=NULL ) {
-  	if ( Mix_PlayingMusic() )
-    		Mix_HaltMusic();
-      	Mix_FreeMusic(music);
-	music=NULL;
-    } */
-  if ( !useAudio ) return;
-    strcpy(name, moddir);
+	char name[72];
+
+	if ( !useAudio ) return;
+	strcpy(name, moddir);
     strcat(name, "/sounds/");
     strcat(name, file);
-    strcat(name, ".s3m");
-    if ( NULL == (music = Mix_LoadMUS(name)) ) {
-
+    strcat(name, ".ogg");
+    
+    if ( NULL == (music = Mix_LoadMUS(name)) ) 
+    {
 		//try mod
     	strcpy(name, moddir);
     	strcat(name, "/sounds/");
     	strcat(name, file);
     	strcat(name, ".mod");
-    	if ( NULL == (music = Mix_LoadMUS(name)) ) {
+    	if ( NULL == (music = Mix_LoadMUS(name)) ) 
+    	{
     		strcpy(name, moddir);
     		strcat(name, "/sounds/");
     		strcat(name, file);
     		strcat(name, ".xm");
-    		if ( NULL == (music = Mix_LoadMUS(name)) ) {
+    		if ( NULL == (music = Mix_LoadMUS(name)) ) 
+    		{
     			strcpy(name, moddir);
     			strcat(name, "/sounds/");
     			strcat(name, file);
-    			strcat(name, ".ogg");
-    			if ( NULL == (music = Mix_LoadMUS(name)) ) {
+    			strcat(name, ".s3m");
+    			if ( NULL == (music = Mix_LoadMUS(name)) ) 
+    			{
     			    #ifdef PSP
       				pspDebugScreenPrintf("Couldn't load: %s\n", name);
       				#endif
-      				//useAudio = 0;
-      				//return;
+				}
 			}
 		}
-	}
     }
   Mix_PlayMusic(music, -1);
 }
@@ -263,12 +203,8 @@ void GlobalVolumeDown() {
 
 void stopMusic() {
   if ( !useAudio ) return;
-//    if ( music!=NULL ) {
   	if ( Mix_PlayingMusic() )
-    		Mix_HaltMusic();
- //     	Mix_FreeMusic(music);
-//	music=NULL;
- //   }
+		Mix_HaltMusic();
 }
 
 void playChunk(int idx) {

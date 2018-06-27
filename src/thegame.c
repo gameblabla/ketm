@@ -49,7 +49,7 @@ void thegame_work()
 	gt=(SDL_GetTicks()-level_start_time)/100;
 
 	if(d->lives>0) {
-		if(keyboard[keyconfig.e]) {
+		if(keyboard[keyconfig.e] || keyboard[keyconfig.g]) {
 			newstate(ST_MENU,MEN_PAUSE,1);
 		}
 
