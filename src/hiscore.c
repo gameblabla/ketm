@@ -40,18 +40,19 @@ void hsc_load()
 	FILE *fp;
 	char fn[50];
 	int tmpscore;
-        strcpy(fn,moddir);
-        strcat(fn,"/");
-        strcat(fn,"highscore.txt");
+	strcpy(fn,moddir);
+	strcat(fn,"/");
+	strcat(fn,"highscore.txt");
 
  	if ( NULL == (fp = fopen(fn,"r")) ) {
     		return;
 	}
-	for(i=0;i<5;i++) {
+	for(i=0;i<5;i++) 
+	{
 		if (fscanf(fp,"%s %d\n",hsc_table[i].name,&tmpscore)==2) {
 			hsc_table[i].score=tmpscore;
 		}
-        }
+	}
 	fclose(fp);
 
 }

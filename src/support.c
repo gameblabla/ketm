@@ -39,7 +39,11 @@ void game_init(int argc, char *argv[])
 	//atexit(SDL_Quit);
 
 	//if((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
-	if((screen=SDL_SetVideoMode(320,240,16,SDL_HWSURFACE))==NULL) {
+	if((screen=SDL_SetVideoMode(320,240,16,SDL_HWSURFACE
+#ifdef SDL_TRIPLEBUF
+	| SDL_TRIPLEBUF
+#endif
+	))==NULL) {
 		CHECKPOINT;
 		error(ERR_FATAL,"cant open screen: %s",SDL_GetError());
 	}

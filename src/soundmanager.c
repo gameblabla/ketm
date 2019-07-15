@@ -88,19 +88,34 @@ void initSound() {
 
 	if ( SDL_InitSubSystem(SDL_INIT_AUDIO) < 0 ) 
 	{
-		#ifdef PSP
-		pspDebugScreenPrintf( "Unable to initialize SDL_AUDIO: %s\n", SDL_GetError());
-		#endif
+		printf( "Unable to initialize SDL_AUDIO: %s\n", SDL_GetError());
 		return;
 	}
 
-	audio_rate = 48000;
-	audio_format = AUDIO_S16LSB;
+	audio_rate = 44100;
+	audio_format = MIX_DEFAULT_FORMAT;
 	audio_channels = 2;
-	audio_buffers = 2048 ;
+	audio_buffers = 1024;
+ 	
+	// load support for the OGG and MOD sample/music formats
+	int flags = MIX_INIT_OGG|MIX_INIT_MOD;
+	int initted = Mix_Init(flags);
+	if (initted&flags != flags) 
+	{
+		printf("Mix_Init: Failed to init required ogg and mod support!\n");
+		printf("Mix_Init: %s\n", Mix_GetError());
+		fflush(stdout);
+		exit(2);
+		// handle error
+	}
 
-	Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers);
-    Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
+	if(Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers)==-1) 
+	{
+		printf("Mix_OpenAudio: %s\n", Mix_GetError());
+		fflush(stdout);
+		exit(2);
+	}
+    //Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
     Mix_AllocateChannels(16); //added by Farox
 
 	useAudio = 1;
@@ -113,39 +128,26 @@ void initSound() {
 
 // Play/Stop the music/chunk.
 
-void playMusic(char *file) {
+void playMusic(char *file) 
+{
 	char name[72];
 
 	if ( !useAudio ) return;
-	strcpy(name, moddir);
-    strcat(name, "/sounds/");
-    strcat(name, file);
-    strcat(name, ".ogg");
+    
+    snprintf(name, sizeof(name), "%s/sounds/%s.ogg", moddir, file);
     
     if ( NULL == (music = Mix_LoadMUS(name)) ) 
     {
-		//try mod
-    	strcpy(name, moddir);
-    	strcat(name, "/sounds/");
-    	strcat(name, file);
-    	strcat(name, ".mod");
+		snprintf(name, sizeof(name), "%s/sounds/%s.mod", moddir, file);
     	if ( NULL == (music = Mix_LoadMUS(name)) ) 
     	{
-    		strcpy(name, moddir);
-    		strcat(name, "/sounds/");
-    		strcat(name, file);
-    		strcat(name, ".xm");
+    		snprintf(name, sizeof(name), "%s/sounds/%s.xm", moddir, file);
     		if ( NULL == (music = Mix_LoadMUS(name)) ) 
     		{
-    			strcpy(name, moddir);
-    			strcat(name, "/sounds/");
-    			strcat(name, file);
-    			strcat(name, ".s3m");
+    			snprintf(name, sizeof(name), "%s/sounds/%s.s3m", moddir, file);
     			if ( NULL == (music = Mix_LoadMUS(name)) ) 
     			{
-    			    #ifdef PSP
-      				pspDebugScreenPrintf("Couldn't load: %s\n", name);
-      				#endif
+      				printf("Couldn't load: %s\n", name);
 				}
 			}
 		}
