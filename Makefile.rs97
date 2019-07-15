@@ -6,16 +6,16 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 LD = $(CROSS_COMPILE)gcc
 STRIP = $(CROSS_COMPILE)strip
-SYSROOT     := $(CHAINPREFIX)/usr/mipsel-buildroot-linux-uclibc/sysroot
+SYSROOT     := $(CHAINPREFIX)/usr/mipsel-buildroot-linux-musl/sysroot
 SDL_CFLAGS  := $(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
 SDL_LIBS    := $(shell $(SYSROOT)/usr/bin/sdl-config --libs)
 
 # change compilation / linking flag options
 F_OPTS		= -Iinclude $(SDL_CFLAGS)
-CC_OPTS		= -O2 -fomit-frame-pointer -fdata-sections -ffunction-sections -mips32 -mno-mips16 $(F_OPTS)
+CC_OPTS		= -O2 -fomit-frame-pointer -fdata-sections -ffunction-sections -flto $(F_OPTS)
 CFLAGS		= -I$(SDL_INCLUDE) $(CC_OPTS)
 CXXFLAGS	= $(CFLAGS) 
-LDFLAGS     = $(SDL_LIBS) -lSDL_mixer -lSDL_image -lm -Wl,--as-needed -Wl,--gc-sections -flto -s
+LDFLAGS     = -lSDL_mixer -logg -lvorbis -lmikmod -lSDL_image -lpng -ljpeg -lSDL -lz -lm -Wl,--as-needed -Wl,--gc-sections -flto -s
 
 # Files to be compiled
 SRCDIR    = ./src
