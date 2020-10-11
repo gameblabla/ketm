@@ -15,7 +15,7 @@ F_OPTS		= -Iinclude $(SDL_CFLAGS)
 CC_OPTS		= -O2 -fomit-frame-pointer -fdata-sections -ffunction-sections -flto $(F_OPTS)
 CFLAGS		= -I$(SDL_INCLUDE) $(CC_OPTS)
 CXXFLAGS	= $(CFLAGS) 
-LDFLAGS     = -lSDL_mixer -logg -lvorbis -lmikmod -lSDL_image -lpng -ljpeg -lSDL -lz -lm -Wl,--as-needed -Wl,--gc-sections -flto -s
+LDFLAGS     = -lSDL_mixer -logg -lvorbisidec -lmpg123 -lmikmod -lSDL_image -lpng -ljpeg -lSDL -lz -lm -Wl,--as-needed -Wl,--gc-sections -flto -s
 
 # Files to be compiled
 SRCDIR    = ./src
